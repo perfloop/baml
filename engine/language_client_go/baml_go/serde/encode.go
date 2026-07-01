@@ -211,6 +211,9 @@ func encodeList(value reflect.Value) (*cffi.HostListValue, error) {
 
 // encodeMap now accepts and passes TypeMap
 func encodeMap(mapValue reflect.Value) (*cffi.HostMapValue, error) {
+	if mapValue.Len() == 0 {
+		return &cffi.HostMapValue{}, nil
+	}
 
 	entries := make([]*cffi.HostMapEntry, 0, mapValue.Len())
 	iter := mapValue.MapRange()
