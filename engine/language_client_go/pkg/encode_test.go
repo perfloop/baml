@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/boundaryml/baml/engine/language_client_go/baml_go/serde"
+	"github.com/boundaryml/baml/engine/language_client_go/pkg/cffi"
 	"github.com/ghetzel/testify/require"
 )
 
@@ -37,8 +38,26 @@ func TestEncodeFunctionArguments(t *testing.T) {
 			"e": "f",
 		}
 
-		_, err := serde.EncodeValue(test_value)
+		res, err := serde.EncodeValue(test_value)
 		require.NoError(t, err)
+		require.NotNil(t, res)
+		mapVal, ok := res.Value.(*cffi.HostValue_MapValue)
+		require.True(t, ok)
+		require.NotNil(t, mapVal.MapValue)
+		
+		require.Len(t, mapVal.MapValue.Entries, 3)
+		expected := map[string]string{
+			"a": "b",
+			"c": "d",
+			"e": "f",
+		}
+		for _, entry := range mapVal.MapValue.Entries {
+			strKey, ok := entry.Key.(*cffi.HostMapEntry_StringKey)
+			require.True(t, ok)
+			valVal, ok := entry.Value.Value.(*cffi.HostValue_StringValue)
+			require.True(t, ok)
+			require.Equal(t, expected[strKey.StringKey], valVal.StringValue)
+		}
 	})
 
 	t.Run("EncodeMapWithOptional", func(t *testing.T) {
@@ -49,7 +68,31 @@ func TestEncodeFunctionArguments(t *testing.T) {
 			"c": nil,
 		}
 
-		_, err := serde.EncodeValue(test_value)
+		res, err := serde.EncodeValue(test_value)
 		require.NoError(t, err)
+		require.NotNil(t, res)
+		mapVal, ok := res.Value.(*cffi.HostValue_MapValue)
+		require.True(t, ok)
+		require.NotNil(t, mapVal.MapValue)
+
+		require.Len(t, mapVal.MapValue.Entries, 3)
+		for _, entry := range mapVal.MapValue.Entries {
+			strKey, ok := entry.Key.(*cffi.HostMapEntry_StringKey)
+			require.True(t, ok)
+			switch strKey.StringKey {
+			case "a":
+				valVal, ok := entry.Value.Value.(*cffi.HostValue_StringValue)
+				require.True(t, ok)
+				require.Equal(t, "foo", valVal.StringValue)
+			case "b":
+				valVal, ok := entry.Value.Value.(*cffi.HostValue_StringValue)
+				require.True(t, ok)
+				require.Equal(t, "bar", valVal.StringValue)
+			case "c":
+				require.Nil(t, entry.Value.Value)
+			default:
+				t.Fatalf("unexpected key: %s", strKey.StringKey)
+			}
+		}
 	})
 }

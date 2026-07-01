@@ -23,3 +23,29 @@ func BenchmarkEncodeMap(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkEncodeEmptyMap(b *testing.B) {
+	test_value := map[string]string{}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := serde.EncodeValue(test_value)
+		if err != nil {
+			b.Fatalf("failed to encode map: %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeSingleMap(b *testing.B) {
+	test_value := map[string]string{
+		"k1": "v1",
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := serde.EncodeValue(test_value)
+		if err != nil {
+			b.Fatalf("failed to encode map: %v", err)
+		}
+	}
+}
