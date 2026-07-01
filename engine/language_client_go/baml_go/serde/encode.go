@@ -213,8 +213,10 @@ func encodeList(value reflect.Value) (*cffi.HostListValue, error) {
 func encodeMap(mapValue reflect.Value) (*cffi.HostMapValue, error) {
 
 	entries := make([]*cffi.HostMapEntry, 0, mapValue.Len())
-	for _, key := range mapValue.MapKeys() {
-		value := mapValue.MapIndex(key)
+	iter := mapValue.MapRange()
+	for iter.Next() {
+		key := iter.Key()
+		value := iter.Value()
 		valueHolder, err := encodeValue(value.Interface())
 		if err != nil {
 			return nil, fmt.Errorf("encoding map value: %w", err)
